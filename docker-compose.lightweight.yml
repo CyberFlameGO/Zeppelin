@@ -1,7 +1,31 @@
 version: '3'
 name: zeppelin-lightweight
+volumes:
+  mysql-data:
 services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${LIGHTWEIGHT_MYSQL_ROOT_PASSWORD?:Missing LIGHTWEIGHT_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: zeppelin
+      MYSQL_USER: zeppelin
+      MYSQL_PASSWORD: ${LIGHTWEIGHT_DB_PASSWORD?:Missing LIGHTWEIGHT_DB_PASSWORD}
+    # If you're upgrading from an older version, you can load your old database by switching the volumes below.
+    # Then, take a database dump from the old database, switch the volumes back, and load the dump into the new database.
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # - ./docker/production/data/mysql:/var/lib/mysql
+    #command: --authentication-policy=mysql_native_password
+    healthcheck:
+      test: "/usr/bin/mysql --host=127.0.0.1 --user=root --password=\"${LIGHTWEIGHT_MYSQL_ROOT_PASSWORD}\" --execute \"SHOW DATABASES;\""
+      interval: 1s
+      timeout: 5s
+      retries: 60
+
   migrate:
+    depends_on:
+      mysql:
+        condition: service_healthy
     build: &build
       context: .
       args:
@@ -9,11 +33,11 @@ services:
         API_URL:
     environment: &env
       - NODE_ENV=production
-      - DB_HOST=${LIGHTWEIGHT_DB_HOST}
-      - DB_PORT=${LIGHTWEIGHT_DB_PORT}
-      - DB_USER=${LIGHTWEIGHT_DB_USER}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=zeppelin
       - DB_PASSWORD=${LIGHTWEIGHT_DB_PASSWORD}
-      - DB_DATABASE=${LIGHTWEIGHT_DB_DATABASE}
+      - DB_DATABASE=zeppelin
       - API_PATH_PREFIX=${LIGHTWEIGHT_API_PATH_PREFIX}
     env_file:
       - .env
@@ -45,7 +69,7 @@ services:
       - .env
     working_dir: /zeppelin/backend
     command: ["npm", "run", "start-bot-prod"]
-  
+
   dashboard:
     depends_on:
       migrate:
