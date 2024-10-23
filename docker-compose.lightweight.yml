@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${LIGHTWEIGHT_MYSQL_ROOT_PASSWORD?:Missing LIGHTWEIGHT_MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: zeppelin
       MYSQL_USER: zeppelin
-      MYSQL_PASSWORD: ${LIGHTWEIGHT_MYSQL_PASSWORD?:Missing LIGHTWEIGHT_MYSQL_PASSWORD}
+      MYSQL_PASSWORD: ${LIGHTWEIGHT_DB_PASSWORD?:Missing LIGHTWEIGHT_DB_PASSWORD}
     # If you're upgrading from an older version, you can load your old database by switching the volumes below.
     # Then, take a database dump from the old database, switch the volumes back, and load the dump into the new database.
     volumes:
